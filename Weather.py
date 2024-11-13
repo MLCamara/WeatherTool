@@ -58,7 +58,7 @@ def get_coord(location):
     return lat, lon
 
 
-def get_forecast(lat, lon):
+def get_forecast(lat, lon, unit = 'imperial'):
     """
     Retrieves a 5-day weather forecast for a specified latitude and longitude, averaging the weather data for each day.
 
@@ -70,20 +70,20 @@ def get_forecast(lat, lon):
         list: A list of dictionaries, each containing the average daily temperature, minimum temperature,
               maximum temperature, humidity, and 'feels like' temperature over 5 days.
     """
-    url = f'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={secret}'
+    url = f'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={secret}&units={unit}'
     response = urlopen(url)
     data = response.read()
     forecast_data = json.loads(data)
-    three_hour_forecast = []
-    count = 0
+
+    count = 0 #keeps track of same_day forecast count
     daily_avg = [0, 0, 0, 0, 0]
-    same_day = ''
-    same_day_count = 0
-    forecast_list = []
+    same_day = '' # empty string (placeholder)
+    forecast_list = {}
+
     for day in forecast_data['list']:
         temp_info = day['main']
-        dt = day['dt_txt']
-        match = re.search(r"\d{4}-(\d{1,2})-(\d{1,2})", dt)
+        dt = day['dt_txt'] #dateTime of forecast
+        match = re.search(r"\d{4}-(\d{1,2})-(\d{1,2})", dt) #parses the YY-MM-DD
         date = match.group()
         temp = temp_info['temp']
         mininum = temp_info['temp_min']
@@ -91,24 +91,29 @@ def get_forecast(lat, lon):
         humidity = temp_info['humidity']
         feels_like = temp_info['feels_like']
 
-        if date == same_day:
+        if date == same_day: #adds the forecasted temperature to daily avg if forecasted on same day as previous forecast
             count += 1
             daily_avg[0] += temp
             daily_avg[1] += mininum
             daily_avg[2] += maximum
             daily_avg[3] += humidity
             daily_avg[4] += feels_like
-        elif count != 0:
+        elif count != 0: #finds the average of a 1-day forcasted temperature, appends to forecast_list and changes daily_avg and same_day with new forecast data
             daily_avg[0] /= count
             daily_avg[1] /= count
             daily_avg[2] /= count
             daily_avg[3] /= count
             daily_avg[4] /= count
-            forecast_list.append(daily_avg)
-            daily_avg = [0, 0, 0, 0, 0]  # Reset averages
-            count = 0
 
+            daily_avg = [ int(degree) for degree in daily_avg ]
+            forecast_list[same_day] = daily_avg
+            daily_avg = [temp, mininum, maximum, humidity, feels_like]  # Reset averages
+            count = 1
             same_day = date
+        else:
+            daily_avg = [temp, mininum, maximum, humidity, feels_like]
+            same_day = date
+            count = 1
     return forecast_list
 
 
