@@ -37,7 +37,7 @@ Example:
     Day 2: [Weather details...]
     ...
 """
-secret = '96441982a3994c4b2c0044bd8ab63589'
+secret = 'API KEY GOES HERE'
 
 def get_coord(location):
     """
