@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3e4f95ae-cd2a-47f5-a49c-23c5cf3be1ea" name="Changes" comment="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast">
+    <list default="true" id="3e4f95ae-cd2a-47f5-a49c-23c5cf3be1ea" name="Changes" comment="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast&#10;updated get_forecast function to currently average temps and humidity for each forecasted day">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Weather.py" beforeDir="false" afterPath="$PROJECT_DIR$/Weather.py" afterDir="false" />
     </list>
@@ -24,36 +24,38 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "MLCamara"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;MLCamara&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/MLCamara/WeatherTool.git",
-    "accountId": "9fb321f2-ff74-43b1-95cb-3110a07c89ff"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/MLCamara/WeatherTool.git&quot;,
+    &quot;accountId&quot;: &quot;9fb321f2-ff74-43b1-95cb-3110a07c89ff&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 4
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
   <component name="ProjectId" id="2om16zuoGd1BhNn4zAFGS4OAHtg" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Weather.executor": "Run",
-    "Python.test.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/kingb/PycharmProjects/WeatherTool"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Weather.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/kingb/PycharmProjects/WeatherTool&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.ide.settings.notifications&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\kingb\PycharmProjects\WeatherTool" />
@@ -117,7 +119,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-d7ad00fb9fc3-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.23726.102" />
+        <option value="bundled-python-sdk-fb887030ada0-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.21565.199" />
       </set>
     </attachedChunks>
   </component>
@@ -154,23 +156,29 @@
       <option name="project" value="LOCAL" />
       <updated>1731474340652</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast&#10;updated get_forecast function to currently average temps and humidity for each forecasted day">
+      <option name="closed" value="true" />
+      <created>1731481343388</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1731481343388</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast&#10;updated get_forecast function to currently average temps and humidity for each forecasted day">
+      <option name="closed" value="true" />
+      <created>1731481350958</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1731481350958</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)" />
     <MESSAGE value="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast" />
-    <option name="LAST_COMMIT_MESSAGE" value="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Weather.py</url>
-          <line>119</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast&#10;updated get_forecast function to currently average temps and humidity for each forecasted day" />
+    <option name="LAST_COMMIT_MESSAGE" value="Created GET request methods that gets the latitude and longitude of a city by its name and uses the latitude and longitude to get a 5 day forecast of the city (Needs more improvement not fully working)&#10;Made unit tests to test the functionality of the functions get_coords and get_forcast&#10;updated get_forecast function to currently average temps and humidity for each forecasted day" />
   </component>
 </project>

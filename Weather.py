@@ -2,6 +2,8 @@ import json
 import urllib
 from urllib.request import urlopen
 import re
+import requests
+from datetime import datetime
 
 """
 weather.py
@@ -58,7 +60,7 @@ def get_coord(location):
     return lat, lon
 
 
-def get_forecast(lat, lon, unit = 'imperial'):
+def get_forecast(lat, lon, unit):
     """
     Retrieves a 5-day weather forecast for a specified latitude and longitude, averaging the weather data for each day.
 
@@ -70,6 +72,10 @@ def get_forecast(lat, lon, unit = 'imperial'):
         list: A list of dictionaries, each containing the average daily temperature, minimum temperature,
               maximum temperature, humidity, and 'feels like' temperature over 5 days.
     """
+    if int(unit):
+        unit = 'imperial'
+    else:
+        unit = 'metric'
     url = f'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={secret}&units={unit}'
     response = urlopen(url)
     data = response.read()
@@ -78,7 +84,7 @@ def get_forecast(lat, lon, unit = 'imperial'):
     count = 0 #keeps track of same_day forecast count
     daily_avg = [0, 0, 0, 0, 0]
     same_day = '' # empty string (placeholder)
-    forecast_list = {}
+    forecast_dict = {}
 
     for day in forecast_data['list']:
         temp_info = day['main']
@@ -94,19 +100,22 @@ def get_forecast(lat, lon, unit = 'imperial'):
         if date == same_day: #adds the forecasted temperature to daily avg if forecasted on same day as previous forecast
             count += 1
             daily_avg[0] += temp
-            daily_avg[1] += mininum
-            daily_avg[2] += maximum
+
+            if mininum < daily_avg[1]:
+                daily_avg[1] = mininum
+
+            if maximum > daily_avg[2]:
+                daily_avg[2] = maximum
+
             daily_avg[3] += humidity
             daily_avg[4] += feels_like
-        elif count != 0: #finds the average of a 1-day forcasted temperature, appends to forecast_list and changes daily_avg and same_day with new forecast data
+        elif count != 0: #finds the average of a 1-day forcasted temperature, appends to forecast_dict and changes daily_avg and same_day with new forecast data
             daily_avg[0] /= count
-            daily_avg[1] /= count
-            daily_avg[2] /= count
             daily_avg[3] /= count
             daily_avg[4] /= count
 
             daily_avg = [ int(degree) for degree in daily_avg ]
-            forecast_list[same_day] = daily_avg
+            forecast_dict[same_day] = daily_avg
             daily_avg = [temp, mininum, maximum, humidity, feels_like]  # Reset averages
             count = 1
             same_day = date
@@ -114,9 +123,49 @@ def get_forecast(lat, lon, unit = 'imperial'):
             daily_avg = [temp, mininum, maximum, humidity, feels_like]
             same_day = date
             count = 1
-    return forecast_list
+    return forecast_dict
 
+def display_forecast(location: str, unit: int):
+    lat, lon = get_coord(location)
+    forecast = get_forecast(lat, lon, unit)
+    if int(unit):
+        temp_unit = 'F'
+    else:
+        temp_unit = 'C'
+    print(f"5-Day Weather Forecast for {location}\n")
+    print(f"{'Date':<21} {f'Avg Temp (°{temp_unit})':<15} {f'Low (°{temp_unit})':<10} {f'High (°{temp_unit})':<10} {'Humidity (%)':<15} {f'Feels Like (°{temp_unit})':<15}")
+    print("=" * 94)
+
+    for date, data in forecast.items():
+        # Convert string to datetime object
+        date_object = datetime.strptime(date, '%Y-%m-%d')
+
+        # Get day of the week (full name)
+        day_of_week = date_object.strftime('%A')
+        avg_temp, low_temp, high_temp, humidity, feels_like = data
+        print(f"{date:<12} {day_of_week: <9} {avg_temp:<15} {low_temp:<10} {high_temp:<10} {humidity:<15} {feels_like:<15}")
+        print("=" * 94)
+    print()
 
 if __name__ == '__main__':
-   lat, lon = get_coord('boston')
-   print(get_forecast(lat, lon))
+
+
+   while True:
+       unit = input('Enter 0 for Metric or any other number for Imperial: ')
+       if unit == 'quit':
+           exit()
+       try:
+           int(unit)
+           break # Exit the loop if no error occurs
+       except ValueError:
+           print('Invalid input, try again.')
+
+   while True:
+       city = input('Select a City: ')
+       if city == 'quit':
+           exit()
+       try:
+           display_forecast(city, unit)
+       except IndexError:
+           print('Invalid location entered, try again.')
+
