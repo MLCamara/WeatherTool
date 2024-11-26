@@ -1,9 +1,9 @@
+from http.client import InvalidURL
 import json
 import urllib
 from urllib.request import urlopen
 import re
-import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 """
 weather.py
@@ -39,7 +39,7 @@ Example:
     Day 2: [Weather details...]
     ...
 """
-secret = 'API KEY GOES HERE'
+secret = '96441982a3994c4b2c0044bd8ab63589'
 
 def get_coord(location):
     """
@@ -125,14 +125,45 @@ def get_forecast(lat, lon, unit):
             count = 1
     return forecast_dict
 
-def display_forecast(location: str, unit: int):
-    lat, lon = get_coord(location)
+def get_current_weather(lat: float, lon: float, unit: int):
+    if int(unit):
+        unit = 'imperial'
+        speed = 'mph/hr'
+        temp_unit = 'F'
+    else:
+        unit = 'metric'
+        speed = 'm/s'
+        temp_unit = 'C'
+        
+    url = f'http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units={unit}&appid={secret}'
+    response = urlopen(url)
+    data = response.read()
+    weather_data = json.loads(data)
+    weather_description = weather_data['weather'][0]['description']
+    curr_temp = weather_data['main']['temp']
+    curr_temp = int(curr_temp)
+    humidity = weather_data['main']['humidity']
+    wind_speed = weather_data['wind']['speed']
+    wind_degree = weather_data['wind']['deg']
+    feels_like = weather_data['main']['feels_like']
+    feels_like = int(feels_like)
+    cloud_coverage = weather_data['clouds']['all']
+    timezone_offset = weather_data['timezone']
+    datetime = convert_timestamp(timezone_offset)
+    print(f"{f'{datetime}':<36} {f'{curr_temp}°{temp_unit}':<6} {f'{humidity}% humidity':<15} {f'Feels like {feels_like}°{temp_unit}':<8}")
+    print(weather_description)
+    print(f"{f'Wind Speed: {wind_speed}{speed}':<10}    Direction: {wind_degree}°")
+    print(f'Cloud Coverage: {cloud_coverage}%\n')
+    
+    
+def display_forecast(location: str, lat: float, lon: float, unit: int):
     forecast = get_forecast(lat, lon, unit)
     if int(unit):
         temp_unit = 'F'
     else:
         temp_unit = 'C'
-    print(f"5-Day Weather Forecast for {location}\n")
+    location = location.replace('_', ' ')
+    print(f"\n5-Day Weather Forecast for {location}\n")
     print(f"{'Date':<21} {f'Avg Temp (°{temp_unit})':<15} {f'Low (°{temp_unit})':<10} {f'High (°{temp_unit})':<10} {'Humidity (%)':<15} {f'Feels Like (°{temp_unit})':<15}")
     print("=" * 94)
 
@@ -146,6 +177,22 @@ def display_forecast(location: str, unit: int):
         print(f"{date:<12} {day_of_week: <9} {avg_temp:<15} {low_temp:<10} {high_temp:<10} {humidity:<15} {feels_like:<15}")
         print("=" * 94)
     print()
+
+from datetime import datetime, timedelta
+
+def convert_timestamp(timezone_offset_seconds: int):
+    # Get the current UTC time (with timezone info)
+    now_utc = datetime.now(tz=timezone.utc)  # Get current UTC time
+    
+    # Create a timezone object using the provided timezone offset (in seconds)
+    tz = timezone(timedelta(seconds=timezone_offset_seconds))
+    
+    # Convert the current UTC time to the specified timezone by applying the offset
+    dt_with_timezone = now_utc.astimezone(tz)
+    
+    # Format the datetime to RFC 2822 format
+    return dt_with_timezone.strftime('%a, %d %b %Y %H:%M:%S UTC%z')
+
 
 if __name__ == '__main__':
 
@@ -162,10 +209,16 @@ if __name__ == '__main__':
 
    while True:
        city = input('Select a City: ')
+       city = city.replace(' ', '_') #replaces spaces for underscores, so it can be used in a URL
+
        if city == 'quit':
            exit()
        try:
-           display_forecast(city, unit)
-       except IndexError:
+           lat, lon = get_coord(city)
+           display_forecast(city, lat, lon, unit)
+           get_current_weather(lat, lon, unit)
+       except (IndexError, InvalidURL):
            print('Invalid location entered, try again.')
+      
+        
 
