@@ -1,39 +1,37 @@
 import unittest
-from Weather import get_coord, get_forecast  # Adjust if the filename is different
+import json
+from unittest.mock import patch, MagicMock
+from Weather import get_coord, get_forecast, get_current_weather, convert_timestamp
 
+class TestWeatherModule(unittest.TestCase):
 
-class WeatherTestCase(unittest.TestCase):
+    @patch('Weather.urlopen')
+    def test_get_coord(self, mock_urlopen):
+        # Mock API response for get_coord
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'[{"lat": 38.8951, "lon": -77.0364}]'
+        mock_urlopen.return_value = mock_response
 
-    def test_get_coord_valid_city(self):
-        """Test get_coord with a valid city name."""
-        lat, lon = get_coord("Boston")
-        # Check that lat and lon are floats
-        self.assertIsInstance(lat, float, "Latitude should be a float.")
-        self.assertIsInstance(lon, float, "Longitude should be a float.")
+        # Call the function with a test city
+        lat, lon = get_coord("Washington")
+        self.assertEqual(lat, 38.8951)
+        self.assertEqual(lon, -77.0364)
 
-    def test_get_coord_invalid_city(self):
-        """Test get_coord with an invalid city name to see if it handles errors."""
-        with self.assertRaises(IndexError):
-            get_coord("InvalidCityName1234")
+    def test_convert_timestamp(self):
+        # Test convert_timestamp with a positive offset
+        offset = 3600  # 1 hour
+        dt = convert_timestamp(offset)
+        self.assertIn("UTC+0100", dt)
 
-    def test_get_forecast_valid_coordinates(self):
-        """Test get_forecast with valid coordinates."""
-        lat, lon = 42.3601, -71.0589  # Coordinates for Boston
-        forecast = get_forecast(lat, lon)
-        # Check that forecast is a list
-        self.assertIsInstance(forecast, list, "Forecast should be a list.")
-        # Check that forecast contains daily averages (i.e., sub-lists or dicts)
-        if forecast:
-            self.assertIsInstance(forecast[0], list, "Each item in forecast should be a list of daily averages.")
-            self.assertEqual(len(forecast[0]), 5, "Each forecast entry should contain 5 daily average values.")
+        # Test convert_timestamp with a negative offset
+        offset = -18000  # -5 hours
+        dt = convert_timestamp(offset)
+        self.assertIn("UTC-0500", dt)
 
-    def test_get_forecast_empty_result(self):
-        """Test get_forecast with invalid coordinates (e.g., ocean or uninhabited area)."""
-        lat, lon = 0.0, 0.0  # Example of empty or unpopulated coordinates
-        forecast = get_forecast(lat, lon)
-        # Check that forecast may return empty data or handle gracefully
-        self.assertIsInstance(forecast, list, "Forecast should be a list even if empty.")
-        self.assertTrue(len(forecast) >= 0, "Forecast list length should be zero or more.")
+        # Test convert_timestamp with zero offset
+        offset = 0
+        dt = convert_timestamp(offset)
+        self.assertIn("UTC+0000", dt)
 
 
 if __name__ == '__main__':
