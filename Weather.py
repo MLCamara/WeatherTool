@@ -153,10 +153,12 @@ def get_current_weather(lat: float, lon: float, unit: int, weather_data=None):
     cloud_coverage = weather_data['clouds']['all']
     timezone_offset = weather_data['timezone']
     datetime = convert_timestamp(timezone_offset)
+    direction = degrees_to_compass(wind_degree)
+
     print(
         f"{f'{datetime}':<36} {f'{curr_temp}°{temp_unit}':<6} {f'{humidity}% humidity':<15} {f'Feels like {feels_like}°{temp_unit}':<8}")
     print(weather_description)
-    print(f"{f'Wind Speed: {wind_speed}{speed}':<10}    Direction: {wind_degree}°")
+    print(f"{f'Wind Speed: {wind_speed}{speed}':<10}    Direction: {direction}")
     print(f'Cloud Coverage: {cloud_coverage}%\n')
     return weather_data
 
@@ -219,6 +221,43 @@ def find_in_database(location: str, db_cursor: sqlite3.Cursor):
         current_forecast_data = json.loads(current_forecast_json)
         return forecast_data, current_forecast_data
 
+
+def degrees_to_compass(degrees: int):
+    # Normalize degrees to be between 0 and 360
+    degrees = degrees % 360
+
+    if degrees >= 0 and degrees < 22.5:
+        return "N"
+    elif degrees >= 22.5 and degrees < 45:
+        return "NE"
+    elif degrees >= 45 and degrees < 67.5:
+        return "ENE"
+    elif degrees >= 67.5 and degrees < 90:
+        return "E"
+    elif degrees >= 90 and degrees < 112.5:
+        return "ESE"
+    elif degrees >= 112.5 and degrees < 135:
+        return "SE"
+    elif degrees >= 135 and degrees < 157.5:
+        return "SSE"
+    elif degrees >= 157.5 and degrees < 180:
+        return "S"
+    elif degrees >= 180 and degrees < 202.5:
+        return "SSW"
+    elif degrees >= 202.5 and degrees < 225:
+        return "SW"
+    elif degrees >= 225 and degrees < 247.5:
+        return "WSW"
+    elif degrees >= 247.5 and degrees < 270:
+        return "W"
+    elif degrees >= 270 and degrees < 292.5:
+        return "WNW"
+    elif degrees >= 292.5 and degrees < 315:
+        return "NW"
+    elif degrees >= 315 and degrees < 337.5:
+        return "NNW"
+    else:
+        return "N"
 
 if __name__ == '__main__':
     conn = sqlite3.connect(':memory:')
