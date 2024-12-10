@@ -17,14 +17,29 @@ Requirements:
     - An API key from OpenWeather: https://openweathermap.org/appid
 
 Functions:
-    get_coord(location: str) -> dict:
-        Retrieves the 5-day weather forecast data from OpenWeather API for the given location (city name or zip code).
+    get_coord(location: str) -> tuple:
+        Retrieves latitude and longitude coordinates for a specified location (city name or zip code).
 
-    parse_forecast_data(data: dict) -> list:
-        Processes the raw data received from OpenWeather API and organizes it into a structured list of daily forecasts.
+    get_forecast(lat: float, lon: float, unit: int) -> dict:
+        Fetches and processes a 5-day weather forecast from OpenWeather API.
 
-    display_forecast(forecast: list) -> None:
-        Prints the 5-day forecast in a user-friendly format on the console.
+    get_current_weather(lat: float, lon: float, unit: int, weather_data=None) -> dict:
+        Fetches and displays current weather conditions for a location.
+
+    display_forecast(location: str, forecast: dict, degree_unit: int) -> None:
+        Displays the 5-day forecast in a formatted table.
+
+    convert_timestamp(timezone_offset_seconds: int) -> str:
+        Converts a UNIX timestamp with a timezone offset to a readable date and time string.
+
+    insert_to_database(forecast: dict, curr_forecast: dict, location: str, db_cursor: sqlite3.Cursor) -> None:
+        Inserts forecast and current weather data into the database.
+
+    find_in_database(location: str, db_cursor: sqlite3.Cursor) -> tuple or None:
+        Searches the database for weather data for a specific location.
+
+    degrees_to_compass(degrees: int) -> str:
+        Converts a wind direction in degrees to its compass direction.
 
 Usage:
     1. Set your OpenWeather API key as an environment variable or directly within the code.
@@ -38,7 +53,9 @@ Example:
     Day 2: [Weather details...]
     ...
 """
-secret = 'API KEY GOES HERE'
+
+# Replace with your OpenWeather API key
+secret = '96441982a3994c4b2c0044bd8ab63589'
 
 
 def get_coord(location):
@@ -67,29 +84,26 @@ def get_forecast(lat, lon, unit):
     Args:
         lat (float): Latitude coordinate of the location.
         lon (float): Longitude coordinate of the location.
+        unit (int): Unit system to use (0 for metric, any other number for imperial).
 
     Returns:
-        list: A list of dictionaries, each containing the average daily temperature, minimum temperature,
-              maximum temperature, humidity, and 'feels like' temperature over 5 days.
+        dict: A dictionary containing the processed 5-day forecast data.
     """
-    if int(unit):
-        unit = 'imperial'
-    else:
-        unit = 'metric'
+    unit = 'imperial' if int(unit) else 'metric'
     url = f'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={secret}&units={unit}'
     response = urlopen(url)
     data = response.read()
     forecast = json.loads(data)
 
-    count = 0  # keeps track of same_day forecast count
-    daily_avg = [0, 0, 0, 0, 0]
-    same_day = ''  # empty string (placeholder)
+    count = 0
+    daily_avg = [0, 0, 0, 0, 0]  # Temp, Min, Max, Humidity, Feels Like
+    same_day = ''
     forecast_dict = {}
 
     for day in forecast['list']:
         temp_info = day['main']
-        dt = day['dt_txt']  # dateTime of forecast
-        match = re.search(r"\d{4}-(\d{1,2})-(\d{1,2})", dt)  # parses the YY-MM-DD
+        dt = day['dt_txt']
+        match = re.search(r"\d{4}-(\d{1,2})-(\d{1,2})", dt)
         date = match.group()
         temp = temp_info['temp']
         mininum = temp_info['temp_min']
@@ -97,26 +111,20 @@ def get_forecast(lat, lon, unit):
         humidity = temp_info['humidity']
         feels_like = temp_info['feels_like']
 
-        if date == same_day:  # adds the forecasted temperature to daily avg if forecasted on same day as previous forecast
+        if date == same_day:
             count += 1
             daily_avg[0] += temp
-
-            if mininum < daily_avg[1]:
-                daily_avg[1] = mininum
-
-            if maximum > daily_avg[2]:
-                daily_avg[2] = maximum
-
+            daily_avg[1] = min(daily_avg[1], mininum)
+            daily_avg[2] = max(daily_avg[2], maximum)
             daily_avg[3] += humidity
             daily_avg[4] += feels_like
-        elif count != 0:  # finds the average of a 1-day forcast temperature, appends to forecast_dict and changes daily_avg and same_day with new forecast data
+        elif count != 0:
             daily_avg[0] /= count
             daily_avg[3] /= count
             daily_avg[4] /= count
-
             daily_avg = [int(degree) for degree in daily_avg]
             forecast_dict[same_day] = daily_avg
-            daily_avg = [temp, mininum, maximum, humidity, feels_like]  # Reset averages
+            daily_avg = [temp, mininum, maximum, humidity, feels_like]
             count = 1
             same_day = date
         else:
@@ -127,14 +135,21 @@ def get_forecast(lat, lon, unit):
 
 
 def get_current_weather(lat: float, lon: float, unit: int, weather_data=None):
-    if int(unit):
-        unit = 'imperial'
-        speed = 'mph/hr'
-        temp_unit = 'F'
-    else:
-        unit = 'metric'
-        speed = 'm/s'
-        temp_unit = 'C'
+    """
+    Retrieves and displays the current weather conditions for a given latitude and longitude.
+
+    Args:
+        lat (float): Latitude of the location.
+        lon (float): Longitude of the location.
+        unit (int): Unit system (0 for metric, any other number for imperial).
+        weather_data (dict, optional): Cached weather data to avoid API calls.
+
+    Returns:
+        dict: Current weather data.
+    """
+    unit = 'imperial' if int(unit) else 'metric'
+    speed = 'mph' if unit == 'imperial' else 'm/s'
+    temp_unit = 'F' if unit == 'imperial' else 'C'
 
     if not weather_data:
         url = f'http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units={unit}&appid={secret}'
@@ -143,65 +158,83 @@ def get_current_weather(lat: float, lon: float, unit: int, weather_data=None):
         weather_data = json.loads(data)
 
     weather_description = weather_data['weather'][0]['description']
-    curr_temp = weather_data['main']['temp']
-    curr_temp = int(curr_temp)
+    curr_temp = int(weather_data['main']['temp'])
     humidity = weather_data['main']['humidity']
     wind_speed = weather_data['wind']['speed']
     wind_degree = weather_data['wind']['deg']
-    feels_like = weather_data['main']['feels_like']
-    feels_like = int(feels_like)
+    feels_like = int(weather_data['main']['feels_like'])
     cloud_coverage = weather_data['clouds']['all']
     timezone_offset = weather_data['timezone']
-    datetime = convert_timestamp(timezone_offset)
+    datetime_str = convert_timestamp(timezone_offset)
     direction = degrees_to_compass(wind_degree)
 
     print(
-        f"{f'{datetime}':<36} {f'{curr_temp}°{temp_unit}':<6} {f'{humidity}% humidity':<15} {f'Feels like {feels_like}°{temp_unit}':<8}")
+        f"{f'{datetime_str}':<36} {f'{curr_temp}°{temp_unit}':<6} {f'{humidity}% humidity':<15} {f'Feels like {feels_like}°{temp_unit}':<8}")
     print(weather_description)
     print(f"{f'Wind Speed: {wind_speed}{speed}':<10}    Direction: {direction}")
     print(f'Cloud Coverage: {cloud_coverage}%\n')
     return weather_data
 
+def display_forecast(location: str, forecast: dict, degree_unit: int):
+    """
+    Displays the 5-day weather forecast for a specified location in a formatted table.
 
-def display_forecast(location: str, forecast: json, degree_unit: int):
-    if int(degree_unit):
-        temp_unit = 'F'
-    else:
-        temp_unit = 'C'
+    Args:
+        location (str): The name of the city or location for the forecast.
+        forecast (dict): A dictionary containing the processed 5-day forecast data.
+        degree_unit (int): Unit system (0 for metric, any other number for imperial).
+
+    Returns:
+        None
+    """
+    temp_unit = 'F' if int(degree_unit) else 'C'
     location = location.replace('_', ' ')
     print(f"\n5-Day Weather Forecast for {location}\n")
     print(
-        f"{'Date':<21} {f'Avg Temp (°{temp_unit})':<15} {f'Low (°{temp_unit})':<10} {f'High (°{temp_unit})':<10} {'Humidity (%)':<15} {f'Feels Like (°{temp_unit})':<15}")
+        f"{'Date':<21} {f'Avg Temp (°{temp_unit})':<15} {f'Low (°{temp_unit})':<10} "
+        f"{f'High (°{temp_unit})':<10} {'Humidity (%)':<15} {f'Feels Like (°{temp_unit})':<15}")
     print("=" * 94)
 
     for date, forecast_data in forecast.items():
-        # Convert string to datetime object
         date_object = datetime.strptime(date, '%Y-%m-%d')
-
-        # Get day of the week (full name)
         day_of_week = date_object.strftime('%A')
         avg_temp, low_temp, high_temp, humidity, feels_like = forecast_data
         print(
-            f"{date:<12} {day_of_week: <9} {avg_temp:<15} {low_temp:<10} {high_temp:<10} {humidity:<15} {feels_like:<15}")
+            f"{date:<12} {day_of_week:<9} {avg_temp:<15} {low_temp:<10} {high_temp:<10} "
+            f"{humidity:<15} {feels_like:<15}")
         print("=" * 94)
     print()
 
 
 def convert_timestamp(timezone_offset_seconds: int):
-    # Get the current UTC time (with timezone info)
-    now_utc = datetime.now(tz=timezone.utc)  # Get current UTC time
+    """
+    Converts a UNIX timestamp with a timezone offset to a readable date and time string.
 
-    # Create a timezone object using the provided timezone offset (in seconds)
+    Args:
+        timezone_offset_seconds (int): The timezone offset in seconds.
+
+    Returns:
+        str: The converted date and time string in RFC 2822 format.
+    """
+    now_utc = datetime.now(tz=timezone.utc)
     tz = timezone(timedelta(seconds=timezone_offset_seconds))
-
-    # Convert the current UTC time to the specified timezone by applying the offset
     dt_with_timezone = now_utc.astimezone(tz)
-
-    # Format the datetime to RFC 2822 format
     return dt_with_timezone.strftime('%a, %d %b %Y %H:%M:%S UTC%z')
 
 
-def insert_to_database(forecast: json, curr_forecast: json, location: str, db_cursor: sqlite3.Cursor):
+def insert_to_database(forecast: dict, curr_forecast: dict, location: str, db_cursor: sqlite3.Cursor):
+    """
+    Inserts forecast and current weather data into the database.
+
+    Args:
+        forecast (dict): The 5-day forecast data.
+        curr_forecast (dict): The current weather data.
+        location (str): The name of the location.
+        db_cursor (sqlite3.Cursor): The database cursor.
+
+    Returns:
+        None
+    """
     forecast_json = json.dumps(forecast)
     curr_forecast_json = json.dumps(curr_forecast)
     db_cursor.execute('''INSERT OR IGNORE INTO weather (location, forecast, current_forecast) VALUES (?,?,?)''',
@@ -209,21 +242,39 @@ def insert_to_database(forecast: json, curr_forecast: json, location: str, db_cu
 
 
 def find_in_database(location: str, db_cursor: sqlite3.Cursor):
+    """
+    Searches the database for weather data for a specific location.
+
+    Args:
+        location (str): The name of the location to search for.
+        db_cursor (sqlite3.Cursor): The database cursor.
+
+    Returns:
+        tuple or None: A tuple containing the forecast and current weather data, or None if not found.
+    """
     db_cursor.execute('''SELECT forecast, current_forecast FROM weather WHERE location = ?''', (location,))
     result = db_cursor.fetchone()
 
     if result is None:
         return None
     else:
-        forecast_json = result[0]  # JSON string from the database
-        forecast_data = json.loads(forecast_json)  # Convert back to a dictionary
+        forecast_json = result[0]
+        forecast_data = json.loads(forecast_json)
         current_forecast_json = result[1]
         current_forecast_data = json.loads(current_forecast_json)
         return forecast_data, current_forecast_data
 
 
 def degrees_to_compass(degrees: int):
-    # Normalize degrees to be between 0 and 360
+    """
+    Converts a wind direction in degrees to its corresponding compass direction.
+
+    Args:
+        degrees (int): The wind direction in degrees.
+
+    Returns:
+        str: The compass direction (e.g., 'N', 'NE', 'E').
+    """
     degrees = degrees % 360
 
     if degrees >= 0 and degrees < 22.5:
@@ -259,6 +310,7 @@ def degrees_to_compass(degrees: int):
     else:
         return "N"
 
+
 if __name__ == '__main__':
     conn = sqlite3.connect(':memory:')
     cursor = conn.cursor()
@@ -273,13 +325,13 @@ if __name__ == '__main__':
             exit()
         try:
             int(unit)
-            break  # Exit the loop if no error occurs
+            break
         except ValueError:
             print('Invalid input, try again.')
 
     while True:
         city = input('Select a City: ')
-        city = city.replace(' ', '_')  # replaces spaces for underscores, so it can be used in a URL
+        city = city.replace(' ', '_')
 
         if city == 'quit':
             conn.close()
@@ -295,8 +347,7 @@ if __name__ == '__main__':
                 insert_to_database(forecast_data, curr_forecast_data, city, cursor)
                 conn.commit()
             else:
-                forecast_data = saved_weather[0]
-                curr_forecast_data = saved_weather[1]
+                forecast_data, curr_forecast_data = saved_weather
                 display_forecast(city, forecast_data, unit)
                 get_current_weather(lat, lon, unit, weather_data=curr_forecast_data)
                 print("Data retrieved from database!")
