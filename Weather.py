@@ -54,8 +54,13 @@ Example:
     ...
 """
 
-# Replace with your OpenWeather API key
-secret = '96441982a3994c4b2c0044bd8ab63589'
+# To get your OpenWeather API key:
+# 1. Visit the OpenWeather website: https://openweathermap.org/api
+# 2. Create an account or log in if you already have one.
+# 3. Go to the "API keys" section and generate a new key.
+# 4. Copy the generated API key and paste it in place of 'API KEY GOES HERE' below.
+secret = 'API KEY GOES HERE'
+
 
 
 def get_coord(location):
