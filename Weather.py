@@ -62,8 +62,6 @@ Example:
 secret = '4f4afd2ca411bb21cb3758cf1b4a4720'
 #2nd api key generated and provided for less hassle for the reviewer/grader/professor
 
-
-
 def get_coord(location):
     """
     Retrieves latitude and longitude coordinates for a given location.
@@ -283,38 +281,23 @@ def degrees_to_compass(degrees: int):
     """
     degrees = degrees % 360
 
-    if degrees >= 0 and degrees < 22.5:
+    if degrees < 45:
         return "N"
-    elif degrees >= 22.5 and degrees < 45:
+    elif degrees < 90:
         return "NE"
-    elif degrees >= 45 and degrees < 67.5:
-        return "ENE"
-    elif degrees >= 67.5 and degrees < 90:
+    elif degrees < 135:
         return "E"
-    elif degrees >= 90 and degrees < 112.5:
-        return "ESE"
-    elif degrees >= 112.5 and degrees < 135:
+    elif degrees < 180:
         return "SE"
-    elif degrees >= 135 and degrees < 157.5:
-        return "SSE"
-    elif degrees >= 157.5 and degrees < 180:
+    elif degrees < 225:
         return "S"
-    elif degrees >= 180 and degrees < 202.5:
-        return "SSW"
-    elif degrees >= 202.5 and degrees < 225:
+    elif degrees < 270:
         return "SW"
-    elif degrees >= 225 and degrees < 247.5:
-        return "WSW"
-    elif degrees >= 247.5 and degrees < 270:
+    elif degrees < 315:
         return "W"
-    elif degrees >= 270 and degrees < 292.5:
-        return "WNW"
-    elif degrees >= 292.5 and degrees < 315:
-        return "NW"
-    elif degrees >= 315 and degrees < 337.5:
-        return "NNW"
     else:
-        return "N"
+        return "NW"
+
 
 
 if __name__ == '__main__':
