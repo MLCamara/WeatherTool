@@ -59,7 +59,8 @@ Example:
 # 2. Create an account or log in if you already have one.
 # 3. Go to the "API keys" section and generate a new key.
 # 4. Copy the generated API key and paste it in place of 'API KEY GOES HERE' below.
-secret = 'API KEY GOES HERE'
+secret = '4f4afd2ca411bb21cb3758cf1b4a4720'
+#2nd api key generated and provided for less hassle for the reviewer/grader/professor
 
 
 
